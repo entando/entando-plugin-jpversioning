@@ -39,7 +39,7 @@ jobs:
       - name: "PR format check"
         id: pr-format-check
         run: |
-          ~/ppl-run check-pr-format --lcd "$REPO_FOLDER"
+          ~/ppl-run check-pr-state --lcd "$REPO_FOLDER"
       # BOM
       - name: "entando-core-bom check"
         id: pr-bom-check
