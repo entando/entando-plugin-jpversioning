@@ -5,12 +5,12 @@
     <parent>
         <groupId>org.entando</groupId>
         <artifactId>entando-core-parent</artifactId>
-        <version>6.5.0-ENG-5128-PR-156</version>
+        <version>6.5.0</version>
     </parent>
     <artifactId>entando-plugin-jpversioning</artifactId>
     <groupId>org.entando.entando.plugins</groupId>
     <packaging>war</packaging>
-    <version>6.5.1</version>
+    <version>6.6.0</version>
     <name>Entando Plugin: Content Versioning</name>
     <description>Manages the versioning of portal content, storing the history of performed operations</description>
     <developers>
@@ -35,6 +35,7 @@
     </repositories>
     <properties>
         <checkstyle.skip>true</checkstyle.skip>
+        <entando-core-bom-version>6.6.0</entando-core-bom-version>
     </properties>
     <build>
         <resources>
@@ -99,7 +100,7 @@
             <dependency>
                 <groupId>org.entando</groupId>
                 <artifactId>entando-core-bom</artifactId>
-                <version>6.5.0-ENG-5128</version>
+                <version>${entando-core-bom-version}</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
