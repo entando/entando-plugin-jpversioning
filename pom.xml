@@ -5,12 +5,12 @@
     <parent>
         <groupId>org.entando</groupId>
         <artifactId>entando-core-parent</artifactId>
-        <version>6.5.0-ENG-5128-PR-156</version>
+        <version>6.5.0</version>
     </parent>
     <artifactId>entando-plugin-jpversioning</artifactId>
     <groupId>org.entando.entando.plugins</groupId>
     <packaging>war</packaging>
-    <version>6.5.1</version>
+    <version>6.5.2</version>
     <name>Entando Plugin: Content Versioning</name>
     <description>Manages the versioning of portal content, storing the history of performed operations</description>
     <developers>
@@ -99,7 +99,7 @@
             <dependency>
                 <groupId>org.entando</groupId>
                 <artifactId>entando-core-bom</artifactId>
-                <version>6.5.0-ENG-5128</version>
+                <version>6.5.1</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
@@ -163,6 +163,16 @@
             <groupId>org.mockito</groupId>
             <artifactId>mockito-junit-jupiter</artifactId>
             <scope>test</scope>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.mockito</groupId>
+                    <artifactId>mockito-core</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-inline</artifactId>
         </dependency>
         <dependency>
             <groupId>org.assertj</groupId>

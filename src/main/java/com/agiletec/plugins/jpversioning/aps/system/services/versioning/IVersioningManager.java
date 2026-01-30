@@ -24,6 +24,8 @@ package com.agiletec.plugins.jpversioning.aps.system.services.versioning;
 import com.agiletec.aps.system.common.entity.IEntityManager;
 import java.util.List;
 
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
 import org.entando.entando.ent.exception.EntException;
 import com.agiletec.plugins.jacms.aps.system.services.content.model.Content;
 
