@@ -21,19 +21,6 @@
  */
 package com.agiletec.plugins.jpversioning.aps.system.services.versioning;
 
-import java.io.StringReader;
-import java.util.List;
-
-import javax.xml.parsers.SAXParser;
-
-import org.aspectj.lang.annotation.Aspect;
-import org.aspectj.lang.annotation.Before;
-import org.entando.entando.ent.exception.EntException;
-import org.entando.entando.ent.util.EntLogging.EntLogger;
-import org.entando.entando.ent.util.EntLogging.EntLogFactory;
-import org.entando.entando.ent.util.EntSafeXmlUtils;
-import org.xml.sax.InputSource;
-
 import com.agiletec.aps.system.common.AbstractService;
 import com.agiletec.aps.system.common.entity.parse.EntityHandler;
 import com.agiletec.aps.system.services.baseconfig.ConfigInterface;
@@ -43,8 +30,20 @@ import com.agiletec.plugins.jacms.aps.system.services.content.model.Content;
 import com.agiletec.plugins.jacms.aps.system.services.content.model.ContentRecordVO;
 import com.agiletec.plugins.jpversioning.aps.system.JpversioningSystemConstants;
 import java.io.IOException;
+import java.io.StringReader;
+import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executor;
 import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.parsers.SAXParser;
 import org.apache.commons.lang3.StringUtils;
+import org.aspectj.lang.annotation.Aspect;
+import org.aspectj.lang.annotation.Before;
+import org.entando.entando.ent.exception.EntException;
+import org.entando.entando.ent.util.EntLogging.EntLogFactory;
+import org.entando.entando.ent.util.EntLogging.EntLogger;
+import org.entando.entando.ent.util.EntSafeXmlUtils;
+import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
 /**
@@ -55,6 +54,7 @@ public class VersioningManager extends AbstractService implements IVersioningMan
 
     private static final EntLogger _logger = EntLogFactory.getSanitizedLogger(VersioningManager.class);
 
+
     @Override
     public void init() throws Exception {
         String deleteMidVersions = this.getConfigManager().getParam(JpversioningSystemConstants.CONFIG_PARAM_DELETE_MID_VERSIONS);
@@ -62,13 +62,23 @@ public class VersioningManager extends AbstractService implements IVersioningMan
         _logger.debug("{} ready", this.getClass().getName());
     }
 
+
     @Before("execution(* com.agiletec.plugins.jacms.aps.system.services.content.IContentManager.saveContent(..)) && args(content)")
     public void onSaveContent(Content content) {
         try {
             if (!this.hasToVersionContent(content)) {
                 return;
             }
-            this.saveContentVersion(content.getId());
+            IFDeferredVersioning.possiblyDeferred(_executor,
+                    () -> {
+                        try {
+                            saveContentVersion(content.getId());
+
+                        } catch (EntException ex) {
+                            _logger.error("error in (deferred) onSaveContent", ex);
+                        }
+                        return null;
+                    }, "onSaveContent, " + content.getId());
         } catch (Exception e) {
             _logger.error("error in onSaveContent", e);
         }
@@ -80,7 +90,16 @@ public class VersioningManager extends AbstractService implements IVersioningMan
             if (!this.hasToVersionContent(content)) {
                 return;
             }
-            this.saveContentVersion(content.getId());
+            IFDeferredVersioning.possiblyDeferred(_executor,
+                    () -> {
+                        try {
+                            saveContentVersion(content.getId());
+
+                        } catch (EntException ex) {
+                            _logger.error("error in (deferred) onInsertOnLineContent", ex);
+                        }
+                        return null;
+                    }, "onInsertOnLineContent, " + content.getId());
         } catch (Exception e) {
             _logger.error("error in onInsertOnLineContent", e);
         }
@@ -92,7 +111,16 @@ public class VersioningManager extends AbstractService implements IVersioningMan
             if (!this.hasToVersionContent(content)) {
                 return;
             }
-            this.saveContentVersion(content.getId());
+            IFDeferredVersioning.possiblyDeferred(_executor,
+                    () -> {
+                        try {
+                            saveContentVersion(content.getId());
+
+                        } catch (EntException ex) {
+                            _logger.error("error in (deferred) onRemoveOnLineContent", ex);
+                        }
+                        return null;
+                    }, "onRemoveOnLineContent, " + content.getId());
         } catch (Exception e) {
             _logger.error("error in onRemoveOnLineContent", e);
         }
@@ -104,7 +132,16 @@ public class VersioningManager extends AbstractService implements IVersioningMan
             if (!this.hasToVersionContent(content)) {
                 return;
             }
-            this.saveContentVersion(content.getId());
+            IFDeferredVersioning.possiblyDeferred(_executor,
+                    () -> {
+                        try {
+                            saveContentVersion(content.getId());
+
+                        } catch (EntException ex) {
+                            _logger.error("error in (deferred) onDeleteContent", ex);
+                        }
+                        return null;
+                    }, "onDeleteContent, " + content.getId());
         } catch (Exception e) {
             _logger.error("error in onDeleteContent", e);
         }
@@ -217,7 +254,7 @@ public class VersioningManager extends AbstractService implements IVersioningMan
 
     /**
      * Crea un'entità specifica valorizzata in base alla sua definizione in xml
-     * ed al tipo.
+     * e al tipo.
      *
      * @param entityTypeCode Il codice del tipo di entità.
      * @param xml L'xml dell'entità specifica.
@@ -277,7 +314,7 @@ public class VersioningManager extends AbstractService implements IVersioningMan
 
     /**
      * Setta il nome dell'attributo della root dell'xml rappresentante la
-     * singola entità. Il metodo è ad uso della definizione del servizio
+     * singola entità. Il metodo è a uso della definizione del servizio
      * nell'xml di configurazione di spring. Di default, la definizione del
      * servizio astratto nella configurazione di spring presenta una un nome
      * base "entity"; questa definizione và sostituita nella definizione del
@@ -352,6 +389,14 @@ public class VersioningManager extends AbstractService implements IVersioningMan
         this._configManager = configManager;
     }
 
+    public Executor getExecutor() {
+        return _executor;
+    }
+
+    public void setExecutor(Executor executor) {
+        this._executor = executor;
+    }
+
     private boolean _deleteMidVersions;
 
     private EntityHandler _entityHandler;
@@ -363,5 +408,6 @@ public class VersioningManager extends AbstractService implements IVersioningMan
     private IContentManager _contentManager;
     private ICategoryManager _categoryManager;
     private ConfigInterface _configManager;
+    private Executor _executor;
 
 }

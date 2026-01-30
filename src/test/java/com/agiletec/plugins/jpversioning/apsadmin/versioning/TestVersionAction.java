@@ -28,21 +28,20 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.agiletec.apsadmin.ApsAdminBaseTestCase;
 import com.agiletec.apsadmin.system.ApsAdminSystemConstants;
-import java.util.List;
-
-import javax.sql.DataSource;
-
-import com.agiletec.plugins.jpversioning.util.JpversioningTestHelper;
-
 import com.agiletec.plugins.jacms.aps.system.JacmsSystemConstants;
 import com.agiletec.plugins.jacms.aps.system.services.content.IContentManager;
 import com.agiletec.plugins.jacms.aps.system.services.content.model.Content;
-import com.agiletec.plugins.jacms.apsadmin.content.ContentActionConstants;
 import com.agiletec.plugins.jacms.apsadmin.content.AbstractContentAction;
+import com.agiletec.plugins.jacms.apsadmin.content.ContentActionConstants;
 import com.agiletec.plugins.jpversioning.aps.system.JpversioningSystemConstants;
 import com.agiletec.plugins.jpversioning.aps.system.services.versioning.ContentVersion;
 import com.agiletec.plugins.jpversioning.aps.system.services.versioning.IVersioningManager;
+import com.agiletec.plugins.jpversioning.aps.system.services.versioning.VersioningManager;
+import com.agiletec.plugins.jpversioning.util.JpversioningTestHelper;
 import com.opensymphony.xwork2.Action;
+import java.util.List;
+import java.util.concurrent.Executor;
+import javax.sql.DataSource;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -95,6 +94,9 @@ public class TestVersionAction extends ApsAdminBaseTestCase {
 	void testRecoverAction() throws Throwable {
         String contentId = null;
         try {
+			// force sequential execution by injecting a synchronized runnable
+			Executor syncExecutor = Runnable::run;
+			((VersioningManager)versioningManager).setExecutor(syncExecutor);
             Content contentToVersion = this.contentManager.loadContent("ART187", false);
             contentToVersion.setId(null);
             for (int i = 0; i < 15; i++) {

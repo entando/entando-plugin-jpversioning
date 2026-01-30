@@ -9,7 +9,16 @@
 			http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop.xsd">
 	
     <aop:aspectj-autoproxy />
-	
+
+    <bean id="versioningAsyncExecutor" class="org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor">
+        <property name="corePoolSize" value="1" />
+        <property name="maxPoolSize" value="1" />
+        <property name="queueCapacity" value="1000" />
+        <property name="threadNamePrefix" value="versioningThread-" />
+        <property name="waitForTasksToCompleteOnShutdown" value="true" />
+        <property name="awaitTerminationSeconds" value="120" />
+    </bean>
+
     <bean id="jpversioningVersioningManager" class="com.agiletec.plugins.jpversioning.aps.system.services.versioning.VersioningManager" 
               parent="abstractService" >
         <property name="contentManager" ref="jacmsContentManager" />
@@ -24,6 +33,7 @@
         <property name="entityHandler">
             <bean class="com.agiletec.plugins.jacms.aps.system.services.content.parse.ContentHandler" />
         </property>
+        <property name="executor" ref="versioningAsyncExecutor" />
     </bean>
 	
     <bean id="jpversioningTrashedResourceManager" class="com.agiletec.plugins.jpversioning.aps.system.services.resource.TrashedResourceManager" 

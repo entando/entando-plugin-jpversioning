@@ -25,10 +25,10 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import org.entando.entando.ent.exception.EntException;
+import org.entando.entando.ent.util.EntLogging.EntLogFactory;
+import org.entando.entando.ent.util.EntLogging.EntLogger;
 import org.entando.entando.web.AbstractControllerIntegrationTest;
 import org.entando.entando.web.utils.OAuth2TestUtils;
-import org.entando.entando.ent.util.EntLogging.EntLogger;
-import org.entando.entando.ent.util.EntLogging.EntLogFactory;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -191,6 +191,7 @@ public class ContentVersioningControllerIntegrationTest extends AbstractControll
             contentManager.saveContent(newContent);
             contentManager.saveContent(newContent);
 
+
             listContentVersions(user, newContentId)
                     .andExpect(jsonPath("$.payload.size()", is(5)))
                     .andExpect(jsonPath("$.metaData.page", is(1)))
@@ -310,6 +311,7 @@ public class ContentVersioningControllerIntegrationTest extends AbstractControll
                     status().isCreated());
             newContentId = saveContent("json/1_POST_content_with_boolean_attribute.json", accessToken);
             updateContent("json/1_PUT_content_with_boolean_attribute.json", newContentId, accessToken);
+
 
             final ContentVersion lastVersion = versioningManager.getLastVersion(newContentId);
             Assertions.assertNotNull(lastVersion);
