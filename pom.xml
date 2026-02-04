@@ -111,7 +111,7 @@
             <groupId>org.entando.entando.plugins</groupId>
             <artifactId>entando-plugin-jacms</artifactId>
             <classifier>classes</classifier>
-            <version>6.5.4</version>
+            <version>6.5.4-ESB-827-PR-240</version>
         </dependency>
         <dependency>
             <groupId>org.entando.entando</groupId>
@@ -147,7 +147,7 @@
             <groupId>org.entando.entando.plugins</groupId>
             <artifactId>entando-plugin-jacms</artifactId>
             <type>test-jar</type>
-            <version>6.5.4</version>
+            <version>6.5.4-ESB-827-PR-240</version>
         </dependency>
         <dependency>
             <groupId>org.springframework</groupId>
