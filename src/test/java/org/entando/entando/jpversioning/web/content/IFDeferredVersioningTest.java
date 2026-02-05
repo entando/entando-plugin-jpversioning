@@ -132,4 +132,24 @@ public class IFDeferredVersioningTest extends AbstractControllerIntegrationTest 
         }
     }
 
+    @Test
+    void possiblyDeferred_should_propagate_exception_when_enabled() throws Exception {
+        Executor executor = Runnable::run; // Immediate execution
+        Supplier<String> action = () -> {
+            throw new RuntimeException("Async Exception");
+        };
+
+        try (MockedStatic<IFDeferredVersioning> mocked = mockStatic(IFDeferredVersioning.class)) {
+            mocked.when(IFDeferredVersioning::checkEnabled).thenReturn(true);
+            mocked.when(() -> IFDeferredVersioning.possiblyDeferred(any(), any(), anyString())).thenCallRealMethod();
+
+            CompletableFuture<Void> result = IFDeferredVersioning.possiblyDeferred(executor, action, "testMethod");
+
+            assertNotNull(result);
+            assertTrue(result.isCompletedExceptionally());
+            ExecutionException ex = assertThrows(ExecutionException.class, result::get);
+            assertEquals("Async Exception", ex.getCause().getMessage());
+        }
+    }
+
 }
