@@ -65,69 +65,25 @@ public class VersioningManager extends AbstractService implements IVersioningMan
 
     @Before("execution(* com.agiletec.plugins.jacms.aps.system.services.content.IContentManager.saveContent(..)) && args(content)")
     public void onSaveContent(Content content) {
-        try {
-            if (!this.hasToVersionContent(content)) {
-                return;
-            }
-            IFDeferredVersioning.possiblyDeferred(_executor,
-                    () -> {
-                        try {
-                            saveContentVersion(content.getId());
-
-                        } catch (EntException ex) {
-                            _logger.error("error in (deferred) onSaveContent", ex);
-                        }
-                        return null;
-                    }, "onSaveContent, " + content.getId());
-        } catch (Exception e) {
-            _logger.error("error in onSaveContent", e);
-        }
+        this.processDeferredVersioning(content, "onSaveContent");
     }
 
     @Before("execution(* com.agiletec.plugins.jacms.aps.system.services.content.IContentManager.insertOnLineContent(..)) && args(content)")
     public void onInsertOnLineContent(Content content) {
-        try {
-            if (!this.hasToVersionContent(content)) {
-                return;
-            }
-            IFDeferredVersioning.possiblyDeferred(_executor,
-                    () -> {
-                        try {
-                            saveContentVersion(content.getId());
-
-                        } catch (EntException ex) {
-                            _logger.error("error in (deferred) onInsertOnLineContent", ex);
-                        }
-                        return null;
-                    }, "onInsertOnLineContent, " + content.getId());
-        } catch (Exception e) {
-            _logger.error("error in onInsertOnLineContent", e);
-        }
+        this.processDeferredVersioning(content, "onInsertOnLineContent");
     }
 
     @Before("execution(* com.agiletec.plugins.jacms.aps.system.services.content.IContentManager.removeOnLineContent(..)) && args(content)")
     public void onRemoveOnLineContent(Content content) {
-        try {
-            if (!this.hasToVersionContent(content)) {
-                return;
-            }
-            IFDeferredVersioning.possiblyDeferred(_executor,
-                    () -> {
-                        try {
-                            saveContentVersion(content.getId());
-
-                        } catch (EntException ex) {
-                            _logger.error("error in (deferred) onRemoveOnLineContent", ex);
-                        }
-                        return null;
-                    }, "onRemoveOnLineContent, " + content.getId());
-        } catch (Exception e) {
-            _logger.error("error in onRemoveOnLineContent", e);
-        }
+        this.processDeferredVersioning(content, "onRemoveOnLineContent");
     }
 
     @Before("execution(* com.agiletec.plugins.jacms.aps.system.services.content.IContentManager.deleteContent(..)) && args(content)")
     public void onDeleteContent(Content content) {
+        this.processDeferredVersioning(content, "onDeleteContent");
+    }
+
+    private void processDeferredVersioning(Content content, String methodName) {
         try {
             if (!this.hasToVersionContent(content)) {
                 return;
@@ -136,14 +92,18 @@ public class VersioningManager extends AbstractService implements IVersioningMan
                     () -> {
                         try {
                             saveContentVersion(content.getId());
-
                         } catch (EntException ex) {
-                            _logger.error("error in (deferred) onDeleteContent", ex);
+                            _logger.error("error in (deferred) {}", methodName, ex);
                         }
                         return null;
-                    }, "onDeleteContent, " + content.getId());
+                    }, methodName + ", " + content.getId())
+                    .whenComplete((result, ex) -> {
+                        if (ex != null) {
+                            _logger.error("error in possiblyDeferred {}", methodName, ex);
+                        }
+                    });
         } catch (Exception e) {
-            _logger.error("error in onDeleteContent", e);
+            _logger.error("error in {}", methodName, e);
         }
     }
 

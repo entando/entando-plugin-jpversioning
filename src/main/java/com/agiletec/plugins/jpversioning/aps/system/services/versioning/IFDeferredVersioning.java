@@ -17,12 +17,20 @@ public interface IFDeferredVersioning extends IFeatureFlag {
         return IFeatureFlag.readEnablementStatus("DEFERRED_VERSIONING");
     }
 
-    static void possiblyDeferred(Executor executor, Supplier<String> action, String method) {
+    static CompletableFuture<Void> possiblyDeferred(Executor executor, Supplier<String> action, String method) {
         if (checkEnabled()) {
             ApsDeepDebug.print("deferred-versioning", "running versioning task in a separate thread: " + method);
-            CompletableFuture.runAsync(action::get, executor);
+
+            return CompletableFuture.runAsync(() -> action.get(), executor);
         } else {
-            action.get();
+            try {
+                action.get();
+                return CompletableFuture.completedFuture(null);
+            } catch (Exception e) {
+                CompletableFuture<Void> failed = new CompletableFuture<>();
+                failed.completeExceptionally(e);
+                return failed;
+            }
         }
     }
 

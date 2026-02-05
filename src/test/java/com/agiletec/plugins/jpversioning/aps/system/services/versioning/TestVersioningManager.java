@@ -58,6 +58,7 @@ public class TestVersioningManager extends BaseTestCase {
     private IVersioningManager versioningManager;
     private JpversioningTestHelper helper;
 
+    @org.junit.jupiter.api.Test
     void testGetVersions() throws Throwable {
         List<Long> versions = this.versioningManager.getVersions("CNG12");
         assertNull(versions);
@@ -66,6 +67,7 @@ public class TestVersioningManager extends BaseTestCase {
         this.checkVersionIds(new long[]{1, 2, 3}, versions);
     }
 
+    @org.junit.jupiter.api.Test
     void testGetLastVersions() throws Throwable {
         List<Long> versions = this.versioningManager.getLastVersions("CNG", null);
         assertTrue(versions.isEmpty());
@@ -74,6 +76,7 @@ public class TestVersioningManager extends BaseTestCase {
         this.checkVersionIds(new long[]{3}, versions);
     }
 
+    @org.junit.jupiter.api.Test
     void testGetVersion() throws Throwable {
         ContentVersion contentVersion = this.versioningManager.getVersion(10000);
         assertNull(contentVersion);
@@ -92,6 +95,7 @@ public class TestVersioningManager extends BaseTestCase {
         assertEquals("admin", contentVersion.getUsername());
     }
 
+    @org.junit.jupiter.api.Test
     void testGetLastVersion() throws Throwable {
         ContentVersion contentVersion = this.versioningManager.getLastVersion("CNG12");
         assertNull(contentVersion);
@@ -109,6 +113,7 @@ public class TestVersioningManager extends BaseTestCase {
         assertEquals("mainEditor", contentVersion.getUsername());
     }
 
+    @org.junit.jupiter.api.Test
     void testSaveGetDeleteVersion() throws Throwable {
         ((VersioningManager) this.versioningManager).saveContentVersion("ART102");
         ContentVersion contentVersion = this.versioningManager.getLastVersion("ART102");
@@ -145,11 +150,13 @@ public class TestVersioningManager extends BaseTestCase {
         }
     }
 
+    @org.junit.jupiter.api.Test
     void testContentVersionToIgnore_1() throws Exception {
         this.testContentVersionToIgnore(false, true);
         this.testContentVersionToIgnore(true, true);
     }
 
+    @org.junit.jupiter.api.Test
     void testContentVersionToIgnore_2() throws Exception {
         this.testContentVersionToIgnore(false, false);
         this.testContentVersionToIgnore(true, false);
@@ -215,7 +222,7 @@ public class TestVersioningManager extends BaseTestCase {
     }
 
     @BeforeEach
-	private void init() throws Exception {
+    public void init() throws Exception {
         this.versioningManager = (IVersioningManager) this.getService(JpversioningSystemConstants.VERSIONING_MANAGER);
         this.configManager = (ConfigInterface) this.getService(SystemConstants.BASE_CONFIG_MANAGER);
         this.contentManager = (IContentManager) this.getService(JacmsSystemConstants.CONTENT_MANAGER);
@@ -225,7 +232,7 @@ public class TestVersioningManager extends BaseTestCase {
     }
     
     @AfterEach
-    private void dispose() throws Exception {
+    public void dispose() throws Exception {
         this.helper.cleanContentVersions();
     }
     
