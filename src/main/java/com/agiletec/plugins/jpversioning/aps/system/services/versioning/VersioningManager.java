@@ -88,12 +88,12 @@ public class VersioningManager extends AbstractService implements IVersioningMan
                 return;
             }
             // this is kept sequential
-            final ContentRecordVO record = this.getContentManager().loadContentVO(content.getId());
+            final ContentRecordVO contentRecordVO = this.getContentManager().loadContentVO(content.getId());
             // the remainder of the process can be safely deferred
             IFDeferredVersioning.possiblyDeferred(_executor,
                     () -> {
                         try {
-                            saveContentVersion(record);
+                            saveContentVersion(contentRecordVO);
                         } catch (EntException ex) {
                             _logger.error("error in (deferred) {}", methodName, ex);
                         }
@@ -175,8 +175,8 @@ public class VersioningManager extends AbstractService implements IVersioningMan
     public void saveContentVersion(String contentId) throws EntException {
         try {
             if (contentId != null) {
-                final ContentRecordVO record = this.getContentManager().loadContentVO(contentId);
-                saveContentVersion(record);
+                final ContentRecordVO contentRecordVO = this.getContentManager().loadContentVO(contentId);
+                saveContentVersion(contentRecordVO);
             }
         } catch (Exception e) {
             _logger.error("error in Error saving version for content {}", contentId, e);
@@ -184,10 +184,10 @@ public class VersioningManager extends AbstractService implements IVersioningMan
         }
     }
 
-    protected void saveContentVersion(final ContentRecordVO record) throws EntException {
+    protected void saveContentVersion(final ContentRecordVO recordVO) throws EntException {
         try {
-            if (record != null) {
-                ContentVersion versionRecord = this.createContentVersion(record);
+            if (recordVO != null) {
+                ContentVersion versionRecord = this.createContentVersion(recordVO);
                 //CANCELLAZIONE VERSIONE WORK OBSOLETE
                 if (versionRecord.isApproved()) {
                     int onlineVersionsToDelete = versionRecord.getOnlineVersion() - 1;
@@ -196,8 +196,8 @@ public class VersioningManager extends AbstractService implements IVersioningMan
                 this.getVersioningDAO().addContentVersion(versionRecord);
             }
         } catch (Exception e) {
-            _logger.error("error in Error saving version for content {}", record.getId(), e);
-            throw new EntException("Error saving version for content " + record.getId());
+            _logger.error("error in Error saving version for content {}", recordVO.getId(), e);
+            throw new EntException("Error saving version for content " + recordVO.getId());
         }
     }
 
@@ -379,6 +379,6 @@ public class VersioningManager extends AbstractService implements IVersioningMan
     private IContentManager _contentManager;
     private ICategoryManager _categoryManager;
     private ConfigInterface _configManager;
-    private Executor _executor;
+    private transient Executor _executor;
 
 }
