@@ -24,6 +24,7 @@ package com.agiletec.plugins.jpversioning.aps.system.services.versioning;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
@@ -226,6 +227,33 @@ public class TestVersioningManager extends BaseTestCase {
             }
         }
     }
+
+    @Test
+    void testGetContent_Exception() {
+        ContentVersion contentVersion = new ContentVersion();
+        contentVersion.setContentType("ART");
+        contentVersion.setXml("<invalid xml>");
+        assertThrows(org.entando.entando.ent.exception.EntException.class, () -> {
+            this.versioningManager.getContent(contentVersion);
+        });
+
+        contentVersion.setXml("<content></content>");
+        contentVersion.setContentType("INVALID_TYPE");
+        assertThrows(org.entando.entando.ent.exception.EntException.class, () -> {
+            this.versioningManager.getContent(contentVersion);
+        });
+    }
+
+    @Test
+    void testSaveContentVersion_Exception() {
+        // We test that it does NOT throw exception for null ID, as per implementation
+        try {
+            this.versioningManager.saveContentVersion((String) null);
+        } catch (Exception e) {
+            fail("Should not throw exception for null contentId");
+        }
+    }
+
 
     private void updateConfigItem(String paramKey, String paramValue) throws Exception {
         Map<String, String> params = new HashMap<>();
