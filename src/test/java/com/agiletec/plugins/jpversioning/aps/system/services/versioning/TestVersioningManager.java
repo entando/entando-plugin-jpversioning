@@ -26,6 +26,9 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 import static org.junit.jupiter.api.Assertions.fail;
 
 import com.agiletec.aps.BaseTestCase;
@@ -46,6 +49,7 @@ import javax.sql.DataSource;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.test.util.ReflectionTestUtils;
 
 /**
  * @author G.Cocco
@@ -251,6 +255,38 @@ public class TestVersioningManager extends BaseTestCase {
             this.versioningManager.saveContentVersion((String) null);
         } catch (Exception e) {
             fail("Should not throw exception for null contentId");
+        }
+    }
+
+    @Test
+    void testSaveContentVersionVO_Exception() {
+        com.agiletec.plugins.jacms.aps.system.services.content.model.ContentRecordVO record = new com.agiletec.plugins.jacms.aps.system.services.content.model.ContentRecordVO();
+        record.setId("ART1");
+        record.setVersion("invalid.version"); // This will cause NumberFormatException in createContentVersion
+        
+        assertThrows(org.entando.entando.ent.exception.EntException.class, () -> {
+            ((VersioningManager) this.versioningManager).saveContentVersion(record);
+        });
+        
+        record.setVersion(null); // This will cause NullPointerException in createContentVersion
+        assertThrows(org.entando.entando.ent.exception.EntException.class, () -> {
+            ((VersioningManager) this.versioningManager).saveContentVersion(record);
+        });
+    }
+
+    @Test
+    void testSaveContentVersionString_Exception() throws Exception {
+        IContentManager originalContentManager = ((VersioningManager) this.versioningManager).getContentManager();
+        IContentManager mockContentManager = mock(IContentManager.class);
+        when(mockContentManager.loadContentVO(anyString())).thenThrow(new RuntimeException("Test exception"));
+        
+        try {
+            ((VersioningManager) this.versioningManager).setContentManager(mockContentManager);
+            assertThrows(org.entando.entando.ent.exception.EntException.class, () -> {
+                this.versioningManager.saveContentVersion("ART1");
+            });
+        } finally {
+            ((VersioningManager) this.versioningManager).setContentManager(originalContentManager);
         }
     }
 

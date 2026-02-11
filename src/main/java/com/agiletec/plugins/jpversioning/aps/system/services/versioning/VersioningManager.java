@@ -168,7 +168,7 @@ public class VersioningManager extends AbstractService implements IVersioningMan
             return this.getVersioningDAO().getLastVersion(contentId);
         } catch (Exception e) {
             _logger.error("Error loading last version for content {}", contentId, e);
-            throw new EntException("Error loading last version for content" + contentId);
+            throw new EntException("Error loading last version for content " + contentId);
         }
     }
 
@@ -181,11 +181,11 @@ public class VersioningManager extends AbstractService implements IVersioningMan
             }
         } catch (Exception e) {
             _logger.error("error in Error saving version for content {}", contentId, e);
-            throw new EntException("Error saving version for content" + contentId);
+            throw new EntException("Error saving version for content " + contentId);
         }
     }
 
-    public void saveContentVersion(final ContentRecordVO record) throws EntException {
+    protected void saveContentVersion(final ContentRecordVO record) throws EntException {
         try {
             if (record != null) {
                 ContentVersion versionRecord = this.createContentVersion(record);
@@ -198,7 +198,7 @@ public class VersioningManager extends AbstractService implements IVersioningMan
             }
         } catch (Exception e) {
             _logger.error("error in Error saving version for content {}", record.getId(), e);
-            throw new EntException("Error saving version for content" + record.getId());
+            throw new EntException("Error saving version for content " + record.getId());
         }
     }
 
