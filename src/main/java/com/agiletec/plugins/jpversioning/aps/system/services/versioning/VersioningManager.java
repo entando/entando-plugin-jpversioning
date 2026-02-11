@@ -32,7 +32,6 @@ import com.agiletec.plugins.jpversioning.aps.system.JpversioningSystemConstants;
 import java.io.IOException;
 import java.io.StringReader;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParser;

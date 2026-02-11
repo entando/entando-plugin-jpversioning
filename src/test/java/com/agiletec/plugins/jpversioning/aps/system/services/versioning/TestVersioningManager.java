@@ -26,10 +26,10 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
-import static org.junit.jupiter.api.Assertions.fail;
 
 import com.agiletec.aps.BaseTestCase;
 import com.agiletec.aps.system.SystemConstants;
@@ -49,7 +49,6 @@ import javax.sql.DataSource;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.test.util.ReflectionTestUtils;
 
 /**
  * @author G.Cocco
@@ -118,7 +117,7 @@ public class TestVersioningManager extends BaseTestCase {
 
     @Test
     void testSaveGetDeleteVersion() throws Throwable {
-        ((VersioningManager) this.versioningManager).saveContentVersion("ART102");
+        this.versioningManager.saveContentVersion("ART102");
         ContentVersion contentVersion = this.versioningManager.getLastVersion("ART102");
         assertEquals(4, contentVersion.getId());
         assertEquals("ART102", contentVersion.getContentId());
@@ -163,7 +162,7 @@ public class TestVersioningManager extends BaseTestCase {
     private void checkVersionIds(long[] expected, List<Long> received) {
         assertEquals(expected.length, received.size());
         for (long current : expected) {
-            if (!received.contains(new Long(current))) {
+            if (!received.contains(current)) {
                 fail("Expected " + current + " - Not found");
             }
         }
@@ -212,8 +211,6 @@ public class TestVersioningManager extends BaseTestCase {
             } else {
                 assertTrue(null == versions || versions.isEmpty());
             }
-        } catch (Exception e) {
-            throw e;
         } finally {
             if (null != versions) {
                 for (Long version : versions) {
