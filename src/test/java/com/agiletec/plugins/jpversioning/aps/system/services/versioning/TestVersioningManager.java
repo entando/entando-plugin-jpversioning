@@ -24,29 +24,31 @@ package com.agiletec.plugins.jpversioning.aps.system.services.versioning;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import com.agiletec.aps.BaseTestCase;
 import com.agiletec.aps.system.SystemConstants;
 import com.agiletec.aps.system.services.baseconfig.ConfigInterface;
 import com.agiletec.aps.system.services.baseconfig.SystemParamsUtils;
 import com.agiletec.aps.system.services.group.Group;
-import java.util.List;
-
-import javax.sql.DataSource;
-
-import com.agiletec.plugins.jpversioning.util.JpversioningTestHelper;
-
 import com.agiletec.aps.util.DateConverter;
 import com.agiletec.plugins.jacms.aps.system.JacmsSystemConstants;
 import com.agiletec.plugins.jacms.aps.system.services.content.IContentManager;
 import com.agiletec.plugins.jacms.aps.system.services.content.model.Content;
 import com.agiletec.plugins.jpversioning.aps.system.JpversioningSystemConstants;
+import com.agiletec.plugins.jpversioning.util.JpversioningTestHelper;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import javax.sql.DataSource;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 /**
  * @author G.Cocco
@@ -58,6 +60,7 @@ public class TestVersioningManager extends BaseTestCase {
     private IVersioningManager versioningManager;
     private JpversioningTestHelper helper;
 
+    @Test
     void testGetVersions() throws Throwable {
         List<Long> versions = this.versioningManager.getVersions("CNG12");
         assertNull(versions);
@@ -66,6 +69,7 @@ public class TestVersioningManager extends BaseTestCase {
         this.checkVersionIds(new long[]{1, 2, 3}, versions);
     }
 
+    @Test
     void testGetLastVersions() throws Throwable {
         List<Long> versions = this.versioningManager.getLastVersions("CNG", null);
         assertTrue(versions.isEmpty());
@@ -74,6 +78,7 @@ public class TestVersioningManager extends BaseTestCase {
         this.checkVersionIds(new long[]{3}, versions);
     }
 
+    @Test
     void testGetVersion() throws Throwable {
         ContentVersion contentVersion = this.versioningManager.getVersion(10000);
         assertNull(contentVersion);
@@ -92,6 +97,7 @@ public class TestVersioningManager extends BaseTestCase {
         assertEquals("admin", contentVersion.getUsername());
     }
 
+    @Test
     void testGetLastVersion() throws Throwable {
         ContentVersion contentVersion = this.versioningManager.getLastVersion("CNG12");
         assertNull(contentVersion);
@@ -109,8 +115,9 @@ public class TestVersioningManager extends BaseTestCase {
         assertEquals("mainEditor", contentVersion.getUsername());
     }
 
+    @Test
     void testSaveGetDeleteVersion() throws Throwable {
-        ((VersioningManager) this.versioningManager).saveContentVersion("ART102");
+        this.versioningManager.saveContentVersion("ART102");
         ContentVersion contentVersion = this.versioningManager.getLastVersion("ART102");
         assertEquals(4, contentVersion.getId());
         assertEquals("ART102", contentVersion.getContentId());
@@ -128,28 +135,46 @@ public class TestVersioningManager extends BaseTestCase {
         assertNull(this.versioningManager.getLastVersion("ART102"));
     }
 
-    public void deleteWorkVersions() throws Throwable {
-        List<Long> versions = this.versioningManager.getVersions("ART1");
-        this.checkVersionIds(new long[]{1, 2, 3}, versions);
-        this.versioningManager.deleteWorkVersions("ART1", 0);
-        versions = this.versioningManager.getVersions("ART1");
-        this.checkVersionIds(new long[]{1, 3}, versions);
+    @Test
+    void testDeleteWorkVersions() throws Throwable {
+        String contentId = "ART1";
+        VersioningManager versioningManagerImpl = (VersioningManager) this.versioningManager;
+        try {
+            versioningManagerImpl.setDeleteMidVersions(true);
+            List<Long> versions = this.versioningManager.getVersions(contentId);
+            this.checkVersionIds(new long[]{1, 2, 3}, versions);
+            this.versioningManager.deleteWorkVersions(contentId, 0);
+            versions = this.versioningManager.getVersions(contentId);
+            this.checkVersionIds(new long[]{1, 3}, versions);
+
+            this.helper.initContentVersions();
+            versioningManagerImpl.setDeleteMidVersions(false);
+            versions = this.versioningManager.getVersions(contentId);
+            this.checkVersionIds(new long[]{1, 2, 3}, versions);
+            this.versioningManager.deleteWorkVersions(contentId, 0);
+            versions = this.versioningManager.getVersions(contentId);
+            this.checkVersionIds(new long[]{1, 2, 3}, versions);
+        } finally {
+            versioningManagerImpl.setDeleteMidVersions(true);
+        }
     }
 
     private void checkVersionIds(long[] expected, List<Long> received) {
         assertEquals(expected.length, received.size());
         for (long current : expected) {
-            if (!received.contains(new Long(current))) {
+            if (!received.contains(current)) {
                 fail("Expected " + current + " - Not found");
             }
         }
     }
 
+    @Test
     void testContentVersionToIgnore_1() throws Exception {
         this.testContentVersionToIgnore(false, true);
         this.testContentVersionToIgnore(true, true);
     }
 
+    @Test
     void testContentVersionToIgnore_2() throws Exception {
         this.testContentVersionToIgnore(false, false);
         this.testContentVersionToIgnore(true, false);
@@ -186,8 +211,6 @@ public class TestVersioningManager extends BaseTestCase {
             } else {
                 assertTrue(null == versions || versions.isEmpty());
             }
-        } catch (Exception e) {
-            throw e;
         } finally {
             if (null != versions) {
                 for (Long version : versions) {
@@ -206,6 +229,65 @@ public class TestVersioningManager extends BaseTestCase {
         }
     }
 
+    @Test
+    void testGetContent_Exception() {
+        ContentVersion contentVersion = new ContentVersion();
+        contentVersion.setContentType("ART");
+        contentVersion.setXml("<invalid xml>");
+        assertThrows(org.entando.entando.ent.exception.EntException.class, () -> {
+            this.versioningManager.getContent(contentVersion);
+        });
+
+        contentVersion.setXml("<content></content>");
+        contentVersion.setContentType("INVALID_TYPE");
+        assertThrows(org.entando.entando.ent.exception.EntException.class, () -> {
+            this.versioningManager.getContent(contentVersion);
+        });
+    }
+
+    @Test
+    void testSaveContentVersion_Exception() {
+        // We test that it does NOT throw exception for null ID, as per implementation
+        try {
+            this.versioningManager.saveContentVersion((String) null);
+        } catch (Exception e) {
+            fail("Should not throw exception for null contentId");
+        }
+    }
+
+    @Test
+    void testSaveContentVersionVO_Exception() {
+        com.agiletec.plugins.jacms.aps.system.services.content.model.ContentRecordVO record = new com.agiletec.plugins.jacms.aps.system.services.content.model.ContentRecordVO();
+        record.setId("ART1");
+        record.setVersion("invalid.version"); // This will cause NumberFormatException in createContentVersion
+        
+        assertThrows(org.entando.entando.ent.exception.EntException.class, () -> {
+            ((VersioningManager) this.versioningManager).saveContentVersion(record);
+        });
+        
+        record.setVersion(null); // This will cause NullPointerException in createContentVersion
+        assertThrows(org.entando.entando.ent.exception.EntException.class, () -> {
+            ((VersioningManager) this.versioningManager).saveContentVersion(record);
+        });
+    }
+
+    @Test
+    void testSaveContentVersionString_Exception() throws Exception {
+        IContentManager originalContentManager = ((VersioningManager) this.versioningManager).getContentManager();
+        IContentManager mockContentManager = mock(IContentManager.class);
+        when(mockContentManager.loadContentVO(anyString())).thenThrow(new RuntimeException("Test exception"));
+        
+        try {
+            ((VersioningManager) this.versioningManager).setContentManager(mockContentManager);
+            assertThrows(org.entando.entando.ent.exception.EntException.class, () -> {
+                this.versioningManager.saveContentVersion("ART1");
+            });
+        } finally {
+            ((VersioningManager) this.versioningManager).setContentManager(originalContentManager);
+        }
+    }
+
+
     private void updateConfigItem(String paramKey, String paramValue) throws Exception {
         Map<String, String> params = new HashMap<>();
         params.put(paramKey, paramValue);
@@ -215,7 +297,7 @@ public class TestVersioningManager extends BaseTestCase {
     }
 
     @BeforeEach
-	private void init() throws Exception {
+    public void init() throws Exception {
         this.versioningManager = (IVersioningManager) this.getService(JpversioningSystemConstants.VERSIONING_MANAGER);
         this.configManager = (ConfigInterface) this.getService(SystemConstants.BASE_CONFIG_MANAGER);
         this.contentManager = (IContentManager) this.getService(JacmsSystemConstants.CONTENT_MANAGER);
@@ -225,7 +307,7 @@ public class TestVersioningManager extends BaseTestCase {
     }
     
     @AfterEach
-    private void dispose() throws Exception {
+    public void dispose() throws Exception {
         this.helper.cleanContentVersions();
     }
     
